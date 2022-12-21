@@ -4,8 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.MediaType;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @AutoConfigureJsonTesters
 @SpringBootTest
@@ -42,7 +46,6 @@ class BookServiceApplicationTests {
 		JacksonTester.initFields(this, new ObjectMapper());
 		mvc = MockMvcBuilders.standaloneSetup(bookController).build();
 	}
-
 
 	@Test
 	void contextLoads() {
@@ -71,5 +74,37 @@ class BookServiceApplicationTests {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(content().json(jsonBooks.write(books).getJson()));
+	}
+	//AC3: When I click a particular book in the book list the application will display details of that book.
+	@Test
+	public void canGetAParticularBookById() throws Exception {
+		Book book = new Book(1, "The Hobbit", "J.R.R. Tolkein", 1937, 320);
+		when(bookRepository.getBook(1)).thenReturn(book);
+		mvc.perform(get("/books/1")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(content().json(jsonBook.write(book).getJson()));
+	}
+
+	//AC4: When I click the checkbox next to a book, and then the press the “Delete Book” button, 
+	//     the application will remove the book from my list.
+	@Test
+	public void canDeleteAParticularBookById() throws Exception{
+		mvc.perform(delete("/books/1")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+
+	//AC5: When I click the checkbox next to a book, and then press the “Update Book” button, 
+	//     the application will allow me to update any of the information about the book.
+	@Test
+	public void canUpdateAParticularBookById() throws Exception{
+		Book book = new Book(1, "The Hobbit", "J.R.R. Tolkein", 1937, 320);
+		when(bookRepository.getBook(1)).thenReturn(book);
+		mvc.perform(put("/books/1")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonBook.write(book).getJson()))
+			.andExpect(status().isOk());
 	}
 }
